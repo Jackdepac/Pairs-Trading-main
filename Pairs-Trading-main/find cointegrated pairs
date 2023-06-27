@@ -1,0 +1,41 @@
+'''
+for this part, I wrote a function to find cointegrated pairs based on cointegration test. I used a package called jqdatasdk
+which includes all the information of Chinese stock market to test out my code (the code regarding this part can be replaced)
+
+'''
+
+import numpy as np
+import pandas as pd
+from numpy import *
+import math
+import matplotlib.pyplot as plt
+from statsmodels.tsa.stattools import coint
+
+from jqdatasdk import *
+auth('13418569743','569743')
+
+def find_cointegrated_pairs(dataframe):
+    n = dataframe.shape[1]
+    pvalue_matrix = np.ones((n, n))
+    keys = dataframe.keys()
+    pairs = []
+    for i in range(n):
+        for j in range(i+1, n):
+            stock1 = dataframe[keys[i]]
+            stock2 = dataframe[keys[j]]
+            result = sm.tsa.stattools.coint(stock1, stock2)
+            pvalue = result[1]
+            pvalue_matrix[i, j] = pvalue
+            if pvalue < 0.05:
+                pairs.append((keys[i], keys[j], pvalue))
+
+    return pvalue_matrix, pairs
+
+stock_list = ["002142.XSHE", "600000.XSHG", "600015.XSHG", "600016.XSHG", "600036.XSHG", "601009.XSHG",
+              "601166.XSHG", "601169.XSHG", "601328.XSHG", "601398.XSHG", "601988.XSHG", "601998.XSHG"]
+    # get_price is a function of the library jqdatasdk. It can be used to get the price of the selected stock
+    # We can replace it with our functions
+prices_df = get_price(stock_list, start_date="2014-01-01", end_date="2015-01-01", frequency="daily", fields=["close"])["close"]
+pvalues, pairs = find_cointegrated_pairs(prices_df)
+sns.heatmap(1-pvalues, xticklabels=stock_list, yticklabels=stock_list, cmap='RdYlGn_r', mask = (pvalues == 1))
+print (pairs)

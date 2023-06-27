@@ -1,0 +1,44 @@
+import statsmodels.tsa.stattools as ts
+import numpy as np
+import pandas as pd
+import pandas_datareader.data as web
+
+
+
+if __name__ == '__main__':
+    #Just reading and formatting data into pandas series
+    data1 = web.DataReader('FB', data_source='yahoo', start='4/4/2019', end='4/4/2020')
+
+    data2 = web.DataReader('AAPL', data_source='yahoo', start='4/4/2019', end='4/4/2020')
+
+    data3 = web.DataReader('GLD', data_source='yahoo', start='4/4/2019', end='4/4/2020')
+
+    data4 = web.DataReader('SLV', data_source='yahoo', start='4/4/2019', end='4/4/2020')
+
+    data1['key'] = data1.index
+
+    data2['key'] = data2.index
+
+    data3['key'] = data3.index
+
+    data4['key'] = data4.index
+
+    result = pd.merge(data1, data2, on='key')
+    result2 = pd.merge(data3, data4, on='key')
+
+    x2 = result2['Close_x']
+    y2 = result2['Close_y']
+
+    x1 = result['Close_x']
+    y1 = result['Close_y']
+
+    #Generate Gaussian noise vector
+    noise = pd.Series(np.random.normal(0, 1, len(x1)))
+
+    #Run cointegration test
+    coin_result = ts.coint(x1, x1.add(noise))
+    #Resulting vector gives test statistic, p value, critical values in that order. I would say in implementation we can say if pvalue < 0.05, pair is cointegrated
+    print(coin_result)
+
+    coin_result2 = ts.coint(x2, y2)
+    print(coin_result2)
